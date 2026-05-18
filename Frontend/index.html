@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Registration Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Navigation -->
+        <nav id="navbar" class="hidden">
+            <div class="nav-content">
+                <div class="logo">ResolveAI</div>
+                <div class="nav-links">
+                    <button id="nav-my-complaints" class="nav-link">My Complaints</button>
+                    <button id="nav-submit-complaint" class="nav-link">New Complaint</button>
+                    <button id="nav-admin-dashboard" class="nav-link admin-only hidden">Admin Dashboard</button>
+                    <button id="logout-btn" class="nav-link logout">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main id="main-content">
+            <div id="view-container">
+                <!-- Views will be injected here -->
+                <div id="loading-screen" class="screen">
+                    <div class="loader"></div>
+                    <p>Connecting to server...</p>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2026 ResolveAI Complaints Platform. All rights reserved.</p>
+        </footer>
+    </div>
+
+    <!-- Error Toast -->
+    <div id="error-toast" class="toast hidden"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
