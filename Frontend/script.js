@@ -1,4 +1,9 @@
-const BACKEND_BASE_URL = 'https://complaints-registration-platform-full-b8d7.onrender.com';
+const LOCAL_BACKEND_URL = 'http://localhost:3000';
+const PROD_BACKEND_URL = 'https://complaints-registration-platform-full-ikpp.onrender.com';
+
+const BACKEND_BASE_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? LOCAL_BACKEND_URL 
+    : PROD_BACKEND_URL;
 const API_BASE = `${BACKEND_BASE_URL}/api`;
 
 

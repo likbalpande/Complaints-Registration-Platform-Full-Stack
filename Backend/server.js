@@ -13,10 +13,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-  origin: [process.env.FRONTEND_URL, 'http://127.0.0.1:5500', 'http://localhost:5500'],
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
@@ -144,9 +141,9 @@ app.post('/api/auth/login', async (req, res) => {
     );
 
     res.cookie('token', token, {
-      httpOnly: false,
-      secure: false,
-      sameSite: 'lax', // Using lax for local testing
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
     });
 
     res.json({ name: user.name, email: user.email, role: user.role });
@@ -158,7 +155,11 @@ app.post('/api/auth/login', async (req, res) => {
 
 // POST /api/auth/logout
 app.post('/api/auth/logout', (req, res) => {
-  res.clearCookie('token');
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: true,
+    sameSite: 'none',
+  });
   res.json({ message: 'Logged out successfully' });
 });
 
