@@ -8,6 +8,7 @@ import { db } from './db/index.js';
 import { users, complaints } from './db/schema.js';
 import { eq, and, desc } from 'drizzle-orm';
 import 'dotenv/config';
+import morgan from 'morgan';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -17,10 +18,12 @@ app.use(cors({
   origin: [
     'http://127.0.0.1:5500', 
     'http://localhost:5500', 
-    'https://likbalpande.github.io'
+    'https://likbalpande.github.io',
+    'https://likbalpande.github.io/Complaints-Registration-Platform-Full-Stack/Frontend/'
   ],
   credentials: true
 }));
+app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -54,6 +57,7 @@ const isAdmin = (req, res, next) => {
 
 // POST /api/auth/send-otp
 app.post('/api/auth/send-otp', async (req, res) => {
+  console.log('[ENTRY] POST /api/auth/send-otp - Request received');
   const { name, email } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
@@ -93,15 +97,17 @@ app.post('/api/auth/send-otp', async (req, res) => {
       text: `Your OTP for registration is: ${otp}. It expires in 10 minutes.`,
     });
 
+    console.log('[EXIT] POST /api/auth/send-otp - OTP sent successfully');
     res.json({ message: 'OTP sent to email' });
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] POST /api/auth/send-otp:', error);
     res.status(500).json({ message: 'Failed to send OTP' });
   }
 });
 
 // POST /api/auth/register
 app.post('/api/auth/register', async (req, res) => {
+  console.log('[ENTRY] POST /api/auth/register - Request received');
   const { email, otp, password } = req.body;
 
   try {
@@ -122,15 +128,17 @@ app.post('/api/auth/register', async (req, res) => {
       })
       .where(eq(users.email, email));
 
+    console.log('[EXIT] POST /api/auth/register - Registration successful');
     res.json({ message: 'Registration successful' });
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] POST /api/auth/register:', error);
     res.status(500).json({ message: 'Registration failed' });
   }
 });
 
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
+  console.log('[ENTRY] POST /api/auth/login - Request received');
   const { email, password } = req.body;
 
   try {
@@ -153,25 +161,30 @@ app.post('/api/auth/login', async (req, res) => {
       sameSite: 'none',
     });
 
+    console.log('[EXIT] POST /api/auth/login - Login successful');
     res.json({ name: user.name, email: user.email, role: user.role });
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] POST /api/auth/login:', error);
     res.status(500).json({ message: 'Login failed' });
   }
 });
 
 // POST /api/auth/logout
 app.post('/api/auth/logout', (req, res) => {
+  console.log('[ENTRY] POST /api/auth/logout - Request received');
   res.clearCookie('token', {
     httpOnly: true,
     secure: true,
     sameSite: 'none',
   });
+  console.log('[EXIT] POST /api/auth/logout - Logged out successfully');
   res.json({ message: 'Logged out successfully' });
 });
 
 // GET /api/auth/me
 app.get('/api/auth/me', authenticateToken, (req, res) => {
+  console.log('[ENTRY] GET /api/auth/me - Request received');
+  console.log('[EXIT] GET /api/auth/me - Returning user info');
   res.json(req.user);
 });
 
@@ -179,6 +192,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 
 // POST /api/ai/question
 app.post('/api/ai/question', authenticateToken, async (req, res) => {
+  console.log('[ENTRY] POST /api/ai/question - Request received');
   const { complaint_text } = req.body;
 
   try {
@@ -188,15 +202,17 @@ app.post('/api/ai/question', authenticateToken, async (req, res) => {
     const response = await result.response;
     const text = response.text();
 
+    console.log('[EXIT] POST /api/ai/question - Question generated successfully');
     res.json({ question: text.trim() });
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] POST /api/ai/question:', error);
     res.status(500).json({ message: 'Failed to generate AI question' });
   }
 });
 
 // POST /api/complaints
 app.post('/api/complaints', authenticateToken, async (req, res) => {
+  console.log('[ENTRY] POST /api/complaints - Request received');
   const { complaint_text, ai_question, ai_answer } = req.body;
 
   try {
@@ -207,29 +223,33 @@ app.post('/api/complaints', authenticateToken, async (req, res) => {
       userAnswer: ai_answer,
     }).returning();
 
+    console.log('[EXIT] POST /api/complaints - Complaint saved successfully');
     res.json(newComplaint);
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] POST /api/complaints:', error);
     res.status(500).json({ message: 'Failed to save complaint' });
   }
 });
 
 // GET /api/complaints/my
 app.get('/api/complaints/my', authenticateToken, async (req, res) => {
+  console.log('[ENTRY] GET /api/complaints/my - Request received');
   try {
     const userComplaints = await db.query.complaints.findMany({
       where: eq(complaints.userId, req.user.id),
       orderBy: [desc(complaints.createdAt)],
     });
+    console.log('[EXIT] GET /api/complaints/my - Complaints fetched successfully');
     res.json(userComplaints);
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] GET /api/complaints/my:', error);
     res.status(500).json({ message: 'Failed to fetch complaints' });
   }
 });
 
 // GET /api/admin/complaints
 app.get('/api/admin/complaints', authenticateToken, isAdmin, async (req, res) => {
+  console.log('[ENTRY] GET /api/admin/complaints - Request received');
   try {
     // Since I didn't define relations in schema.ts yet, let's do a join
     const results = await db.select({
@@ -245,9 +265,10 @@ app.get('/api/admin/complaints', authenticateToken, isAdmin, async (req, res) =>
       .innerJoin(users, eq(complaints.userId, users.id))
       .orderBy(desc(complaints.createdAt));
 
+    console.log('[EXIT] GET /api/admin/complaints - All complaints fetched successfully');
     res.json(results);
   } catch (error) {
-    console.error(error);
+    console.error('[ERROR] GET /api/admin/complaints:', error);
     res.status(500).json({ message: 'Failed to fetch all complaints' });
   }
 });
