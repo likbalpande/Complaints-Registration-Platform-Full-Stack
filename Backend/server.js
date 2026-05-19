@@ -16,14 +16,15 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(cors({
   origin: [
-    'http://127.0.0.1:5500', 
-    'http://localhost:5500', 
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
     'https://likbalpande.github.io',
     'https://likbalpande.github.io/Complaints-Registration-Platform-Full-Stack/Frontend/'
   ],
   credentials: true
 }));
-app.use(morgan('dev'));
+morgan.token('user', (req) => req.user ? req.user.email : 'guest');
+app.use(morgan(':method :url :status :response-time ms - :res[content-length] | User: :user'));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -57,7 +58,7 @@ const isAdmin = (req, res, next) => {
 
 // POST /api/auth/send-otp
 app.post('/api/auth/send-otp', async (req, res) => {
-  console.log('[ENTRY] POST /api/auth/send-otp - Request received');
+  console.log(`[ENTRY] POST /api/auth/send-otp - Request received [Email: ${req.body.email || 'unknown'}]`);
   const { name, email } = req.body;
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   const expiry = new Date(Date.now() + 10 * 60 * 1000); // 10 mins
@@ -107,7 +108,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
 // POST /api/auth/register
 app.post('/api/auth/register', async (req, res) => {
-  console.log('[ENTRY] POST /api/auth/register - Request received');
+  console.log(`[ENTRY] POST /api/auth/register - Request received [Email: ${req.body.email || 'unknown'}]`);
   const { email, otp, password } = req.body;
 
   try {
@@ -138,7 +139,7 @@ app.post('/api/auth/register', async (req, res) => {
 
 // POST /api/auth/login
 app.post('/api/auth/login', async (req, res) => {
-  console.log('[ENTRY] POST /api/auth/login - Request received');
+  console.log(`[ENTRY] POST /api/auth/login - Request received [Email: ${req.body.email || 'unknown'}]`);
   const { email, password } = req.body;
 
   try {
@@ -158,7 +159,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'none',
+      sameSite: 'strict',
     });
 
     console.log('[EXIT] POST /api/auth/login - Login successful');
@@ -183,8 +184,8 @@ app.post('/api/auth/logout', (req, res) => {
 
 // GET /api/auth/me
 app.get('/api/auth/me', authenticateToken, (req, res) => {
-  console.log('[ENTRY] GET /api/auth/me - Request received');
-  console.log('[EXIT] GET /api/auth/me - Returning user info');
+  console.log(`[ENTRY] GET /api/auth/me - Request received [User: ${req.user.email}]`);
+  console.log(`[EXIT] GET /api/auth/me - Returning user info [User: ${req.user.email}]`);
   res.json(req.user);
 });
 
@@ -192,7 +193,7 @@ app.get('/api/auth/me', authenticateToken, (req, res) => {
 
 // POST /api/ai/question
 app.post('/api/ai/question', authenticateToken, async (req, res) => {
-  console.log('[ENTRY] POST /api/ai/question - Request received');
+  console.log(`[ENTRY] POST /api/ai/question - Request received [User: ${req.user.email}]`);
   const { complaint_text } = req.body;
 
   try {
@@ -212,7 +213,7 @@ app.post('/api/ai/question', authenticateToken, async (req, res) => {
 
 // POST /api/complaints
 app.post('/api/complaints', authenticateToken, async (req, res) => {
-  console.log('[ENTRY] POST /api/complaints - Request received');
+  console.log(`[ENTRY] POST /api/complaints - Request received [User: ${req.user.email}]`);
   const { complaint_text, ai_question, ai_answer } = req.body;
 
   try {
@@ -233,7 +234,7 @@ app.post('/api/complaints', authenticateToken, async (req, res) => {
 
 // GET /api/complaints/my
 app.get('/api/complaints/my', authenticateToken, async (req, res) => {
-  console.log('[ENTRY] GET /api/complaints/my - Request received');
+  console.log(`[ENTRY] GET /api/complaints/my - Request received [User: ${req.user.email}]`);
   try {
     const userComplaints = await db.query.complaints.findMany({
       where: eq(complaints.userId, req.user.id),
@@ -249,7 +250,7 @@ app.get('/api/complaints/my', authenticateToken, async (req, res) => {
 
 // GET /api/admin/complaints
 app.get('/api/admin/complaints', authenticateToken, isAdmin, async (req, res) => {
-  console.log('[ENTRY] GET /api/admin/complaints - Request received');
+  console.log(`[ENTRY] GET /api/admin/complaints - Request received [User: ${req.user.email}]`);
   try {
     // Since I didn't define relations in schema.ts yet, let's do a join
     const results = await db.select({
