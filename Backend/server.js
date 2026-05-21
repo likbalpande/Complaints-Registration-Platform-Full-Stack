@@ -19,7 +19,8 @@ app.use(cors({
     'http://127.0.0.1:5500',
     'http://localhost:5500',
     'https://likbalpande.github.io',
-    'https://likbalpande.github.io/Complaints-Registration-Platform-Full-Stack/Frontend/'
+    'https://likbalpande.github.io/Complaints-Registration-Platform-Full-Stack/Frontend/',
+    'https://250.likhilesh-tutorials.shop'
   ],
   credentials: true
 }));
@@ -159,7 +160,7 @@ app.post('/api/auth/login', async (req, res) => {
     res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'none',
     });
 
     console.log('[EXIT] POST /api/auth/login - Login successful');
